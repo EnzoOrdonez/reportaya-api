@@ -18,6 +18,9 @@ services:
         fromDatabase:
           name: reportaya-db
           property: connectionString
+      # Version web de la app (GitHub Pages). Lista separada por comas.
+      - key: APP_CORS_ALLOWED_ORIGINS
+        value: "https://enzoordonez.github.io,http://localhost:*,http://127.0.0.1:*"
       # Sin dominio verificado en Resend los correos no llegan a terceros,
       # asi que las cuentas nuevas nacen activas.
       - key: APP_VERIFICAR_CORREO
