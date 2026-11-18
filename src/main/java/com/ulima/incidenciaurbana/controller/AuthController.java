@@ -1,0 +1,51 @@
+package com.ulima.incidenciaurbana.controller;
+
+import com.ulima.incidenciaurbana.util.ApiErrores;
+import com.ulima.incidenciaurbana.dto.LoginRequest;
+import com.ulima.incidenciaurbana.dto.LoginResponse;
+import com.ulima.incidenciaurbana.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/recuperar-password")
+    public ResponseEntity<?> recuperarPassword(@RequestBody Map<String, String> body) {
+        try {
+            authService.solicitarRecuperacion(body.get("correo"));
+            return ResponseEntity.ok(Map.of("message", "Si el correo esta registrado, te enviamos un codigo de recuperacion"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", ApiErrores.mensaje(e)));
+        }
+    }
+
+    @PostMapping("/restablecer-password")
+    public ResponseEntity<?> restablecerPassword(@RequestBody Map<String, String> body) {
+        try {
+            String nuevaContrasena = body.get("nuevaContrasena");
+            if (nuevaContrasena == null) {
+                nuevaContrasena = body.get("password");
+            }
+            authService.restablecerContrasena(body.get("token"), nuevaContrasena);
+            return ResponseEntity.ok(Map.of("message", "Contrasena restablecida exitosamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", ApiErrores.mensaje(e)));
+        }
+    }
+}

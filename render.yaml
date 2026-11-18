@@ -1,0 +1,40 @@
+# Blueprint de Render: backend (Docker, plan gratis) + PostgreSQL gratis.
+# Render > New > Blueprint > este repo. Lo crea todo y genera JWT_SECRET solo.
+# Ojo: la Postgres gratis de Render vence 30 dias despues de creada
+# (ver docs/DESPLIEGUE-NUBE.md para pasar a Neon antes de esa fecha).
+services:
+  - type: web
+    name: reportaya-api
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /salud
+    autoDeployTrigger: commit
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: reportaya-db
+          property: connectionString
+      # Sin dominio verificado en Resend los correos no llegan a terceros,
+      # asi que las cuentas nuevas nacen activas.
+      - key: APP_VERIFICAR_CORREO
+        value: "false"
+      # Hashes BCrypt del operador y de los tecnicos iniciales (no son las claves).
+      # Render los pide al crear el Blueprint; ver docs/DESPLIEGUE-NUBE.md.
+      - key: APP_SEED_OPERADOR_HASH
+        sync: false
+      - key: APP_SEED_TECNICO_HASH
+        sync: false
+
+databases:
+  - name: reportaya-db
+    plan: free
+    region: virginia
+    databaseName: reportaya
+    user: reportaya
+    postgresMajorVersion: "17"
+    # Solo red privada de Render (el backend). Para migrar a Neon, abrirla temporalmente.
+    ipAllowList: []
